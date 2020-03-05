@@ -2,10 +2,10 @@
 
 const DtlsSocket = require('./socket');
 
-function connect(options, callback) {
+function connect(options, secureConnectListener) {
 	const socket = new DtlsSocket(options);
-	if (callback) {
-		socket.once('secureConnect', callback);
+	if (secureConnectListener) {
+		socket.once('secureConnect', secureConnectListener);
 	}
 
 	return socket;

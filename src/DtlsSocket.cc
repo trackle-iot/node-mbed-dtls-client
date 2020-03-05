@@ -1,4 +1,5 @@
 #include "DtlsSocket.h"
+#include "SessionWrap.h"
 
 #include <stdlib.h>
 
@@ -37,6 +38,8 @@ DtlsSocket::Initialize(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
 	Nan::SetPrototypeMethod(ctor, "close", Close);
 	Nan::SetPrototypeMethod(ctor, "send", Send);
 	Nan::SetPrototypeMethod(ctor, "connect", Connect);
+	Nan::SetAccessor(ctorInst, Nan::New("outCounter").ToLocalChecked(), GetOutCounter);
+  	Nan::SetAccessor(ctorInst, Nan::New("session").ToLocalChecked(), GetSession);
 	
 	Nan::Set(target, Nan::New("DtlsSocket").ToLocalChecked(), ctor->GetFunction());
 }
@@ -78,6 +81,17 @@ void DtlsSocket::ReceiveDataFromNode(const Nan::FunctionCallbackInfo<v8::Value>&
 	if (len > 0) {
 		info.GetReturnValue().Set(Nan::CopyBuffer((char*)buf, len).ToLocalChecked());
 	}
+}
+
+NAN_GETTER(DtlsSocket::GetOutCounter) {
+  DtlsSocket *socket = Nan::ObjectWrap::Unwrap<DtlsSocket>(info.This());
+  info.GetReturnValue().Set(Nan::CopyBuffer((char *)socket->ssl_context.out_ctr, 8).ToLocalChecked());
+}
+
+NAN_GETTER(DtlsSocket::GetSession) {
+  DtlsSocket *socket = Nan::ObjectWrap::Unwrap<DtlsSocket>(info.This());
+  v8::Local<v8::Object> sess = SessionWrap::CreateFromContext(&socket->ssl_context, socket->random);
+  info.GetReturnValue().Set(sess);
 }
 
 void DtlsSocket::Close(const Nan::FunctionCallbackInfo<v8::Value>& info) {
@@ -236,10 +250,10 @@ int DtlsSocket::receive_data(unsigned char *buf, int len) {
 	int ret;
 
 	if (ssl_context.state == MBEDTLS_SSL_HANDSHAKE_OVER) {
-		// normal reading of unencrypted data	
+		// normal reading of unencrypted data
 		memset(buf, 0, len);
 		ret = mbedtls_ssl_read(&ssl_context, buf, len);
-		if (ret <= 0) {
+		if (ret <= 0 && ret != MBEDTLS_ERR_SSL_WANT_READ) {
 			error(ret);
 			return 0;
 		}

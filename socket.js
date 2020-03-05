@@ -41,6 +41,14 @@ class DtlsSocket extends stream.Duplex {
 		});
 	}
 
+	get outCounter() {
+		return this.mbedSocket.outCounter;
+	}
+
+	get session() {
+		return this.mbedSocket.session;
+	}
+
 	bind(port, address, callback) {
 		this.dgramSocket.bind(port, address, callback);
 	}
@@ -109,7 +117,7 @@ class DtlsSocket extends stream.Duplex {
 			this._sendCallback(code);
 			this._sendCallback = null;
 		} else {
-			this.emit('error', code, msg);
+			this.emit('err', code, msg);
 		}
 		this._end();
 	}

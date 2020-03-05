@@ -10,6 +10,8 @@
 #include "mbedtls/timing.h"
 #include "mbedtls/debug.h"
 
+#include "SessionWrap.h"
+
 class DtlsSocket : public Nan::ObjectWrap {
 public:
 	static Nan::Persistent<v8::FunctionTemplate> constructor;
@@ -19,6 +21,8 @@ public:
 	static void Close(const Nan::FunctionCallbackInfo<v8::Value>& info);
 	static void Send(const Nan::FunctionCallbackInfo<v8::Value>& info);
 	static void Connect(const Nan::FunctionCallbackInfo<v8::Value>& info);
+  	static NAN_GETTER(GetOutCounter);
+  	static NAN_GETTER(GetSession);
 	DtlsSocket(const unsigned char *priv_key,
 						 size_t priv_key_len,
 						 const unsigned char *peer_pub_key,
@@ -51,6 +55,7 @@ private:
 	mbedtls_timing_delay_context timer;
 	const unsigned char *recv_buf;
 	size_t recv_len;
+	uint8_t random[64];
 };
 
 #endif
