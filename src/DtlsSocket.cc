@@ -41,7 +41,7 @@ DtlsSocket::Initialize(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
 	Nan::SetAccessor(ctorInst, Nan::New("outCounter").ToLocalChecked(), GetOutCounter);
   	Nan::SetAccessor(ctorInst, Nan::New("session").ToLocalChecked(), GetSession);
 	
-	Nan::Set(target, Nan::New("DtlsSocket").ToLocalChecked(), ctor->GetFunction());
+	Nan::Set(target, Nan::New("DtlsSocket").ToLocalChecked(), Nan::GetFunction(ctor).ToLocalChecked());
 }
 
 void DtlsSocket::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
@@ -57,7 +57,7 @@ void DtlsSocket::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 
 	int debug_level = 0;
 	if (info.Length() > 5) {
-		debug_level = info[5]->Uint32Value();
+		debug_level = Nan::To<uint32_t>(info[5]).ToChecked();
 	}
 
 	DtlsSocket *socket = new DtlsSocket(
@@ -218,7 +218,7 @@ int DtlsSocket::send_encrypted(const unsigned char *buf, size_t len) {
 		Nan::CopyBuffer((char *)buf, len).ToLocalChecked()
 	};
 	v8::Local<v8::Function> sendCallbackDirect = send_cb->GetFunction();
-	sendCallbackDirect->Call(Nan::GetCurrentContext()->Global(), 1, argv);
+	Nan::Call(sendCallbackDirect, Nan::GetCurrentContext()->Global(), 1, argv);
 	return len;
 }
 
@@ -291,7 +291,7 @@ int DtlsSocket::step() {
 
 	// this should only be called once when we first finish the handshake
 	v8::Local<v8::Function> handshakeCallbackDirect = handshake_cb->GetFunction();
-	handshakeCallbackDirect->Call(Nan::GetCurrentContext()->Global(), 0, NULL);
+	Nan::Call(handshakeCallbackDirect, Nan::GetCurrentContext()->Global(), 0, NULL);
 	return 0;
 }
 
@@ -309,7 +309,7 @@ void DtlsSocket::error(int ret) {
 		Nan::New(error_buf).ToLocalChecked()
 	};
 	v8::Local<v8::Function> errorCallbackDirect = error_cb->GetFunction();
-	errorCallbackDirect->Call(Nan::GetCurrentContext()->Global(), 2, argv);
+	Nan::Call(errorCallbackDirect, Nan::GetCurrentContext()->Global(), 2, argv);
 }
 
 void DtlsSocket::store_data(const unsigned char *buf, size_t len) {

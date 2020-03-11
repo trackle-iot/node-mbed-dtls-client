@@ -26,7 +26,7 @@ SessionWrap::Initialize(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
   Nan::SetAccessor(ctorInst, Nan::New("in_epoch").ToLocalChecked(), GetInEpoch, SetInEpoch);
   Nan::SetAccessor(ctorInst, Nan::New("out_ctr").ToLocalChecked(), GetOutCounter, SetOutCounter);
 
-  Nan::Set(target, Nan::New("SessionWrap").ToLocalChecked(), ctor->GetFunction());
+  Nan::Set(target, Nan::New("SessionWrap").ToLocalChecked(), Nan::GetFunction(ctor).ToLocalChecked());
 }
 
 void SessionWrap::New(const Nan::FunctionCallbackInfo<v8::Value>& info) {
@@ -58,22 +58,23 @@ v8::Local<v8::Object> SessionWrap::CreateFromContext(mbedtls_ssl_context *ssl, u
 void SessionWrap::Restore(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   SessionWrap *session = Nan::ObjectWrap::Unwrap<SessionWrap>(info.This());
 
-  v8::Local<v8::Object> object = info[0]->ToObject();
-  session->ciphersuite = Nan::Get(object, Nan::New("ciphersuite").ToLocalChecked()).ToLocalChecked()->Uint32Value();
+  v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+  v8::Local<v8::Object> object = info[0]->ToObject(context).ToLocalChecked();
+  session->ciphersuite = Nan::To<uint32_t>(Nan::Get(object, Nan::New("ciphersuite").ToLocalChecked()).ToLocalChecked()).ToChecked();
 
-  v8::Local<v8::Object> rbv = Nan::Get(object, Nan::New("randbytes").ToLocalChecked()).ToLocalChecked()->ToObject();
+  v8::Local<v8::Object> rbv = Nan::Get(object, Nan::New("randbytes").ToLocalChecked()).ToLocalChecked()->ToObject(context).ToLocalChecked();
   memcpy(session->randbytes, Buffer::Data(rbv), Buffer::Length(rbv));
 
-  v8::Local<v8::Object> idv = Nan::Get(object, Nan::New("id").ToLocalChecked()).ToLocalChecked()->ToObject();
+  v8::Local<v8::Object> idv = Nan::Get(object, Nan::New("id").ToLocalChecked()).ToLocalChecked()->ToObject(context).ToLocalChecked();
   memcpy(session->id, Buffer::Data(idv), Buffer::Length(idv));
   session->id_len = Buffer::Length(idv);
 
-  v8::Local<v8::Object> masterv = Nan::Get(object, Nan::New("master").ToLocalChecked()).ToLocalChecked()->ToObject();
+  v8::Local<v8::Object> masterv = Nan::Get(object, Nan::New("master").ToLocalChecked()).ToLocalChecked()->ToObject(context).ToLocalChecked();
   memcpy(session->master, Buffer::Data(masterv), Buffer::Length(masterv));
 
-  session->in_epoch = Nan::Get(object, Nan::New("in_epoch").ToLocalChecked()).ToLocalChecked()->Uint32Value();
+  session->in_epoch = Nan::To<uint32_t>(Nan::Get(object, Nan::New("in_epoch").ToLocalChecked()).ToLocalChecked()).ToChecked();
   
-  v8::Local<v8::Object> out_ctrv = Nan::Get(object, Nan::New("out_ctr").ToLocalChecked()).ToLocalChecked()->ToObject();
+  v8::Local<v8::Object> out_ctrv = Nan::Get(object, Nan::New("out_ctr").ToLocalChecked()).ToLocalChecked()->ToObject(context).ToLocalChecked();
   memcpy(session->out_ctr, Buffer::Data(out_ctrv), Buffer::Length(out_ctrv));
 }
 
@@ -84,7 +85,7 @@ NAN_GETTER(SessionWrap::GetCiphersuite) {
 
 NAN_SETTER(SessionWrap::SetCiphersuite) {
   SessionWrap *session = Nan::ObjectWrap::Unwrap<SessionWrap>(info.This());
-  session->ciphersuite = value->Uint32Value();
+  session->ciphersuite = Nan::To<uint32_t>(value).ToChecked();
 }
 
 
@@ -129,7 +130,7 @@ NAN_GETTER(SessionWrap::GetInEpoch) {
 
 NAN_SETTER(SessionWrap::SetInEpoch) {
   SessionWrap *session = Nan::ObjectWrap::Unwrap<SessionWrap>(info.This());
-  session->in_epoch = value->Uint32Value();
+  session->in_epoch = Nan::To<uint32_t>(value).ToChecked();
 }
 
 
