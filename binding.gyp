@@ -46,6 +46,13 @@
     },
     {
       "target_name": "mbedcrypto",
+      "conditions": [
+        ['target_arch=="arm"', {
+          "cflags_c": [
+            "-fomit-frame-pointer"
+          ]
+        }]
+      ],
       "type": "static_library",
       "sources": [
         "mbedtls/library/aes.c",
