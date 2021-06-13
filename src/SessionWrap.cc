@@ -50,7 +50,7 @@ v8::Local<v8::Object> SessionWrap::CreateFromContext(mbedtls_ssl_context *ssl, u
   news->id_len = ssl->session->id_len;
   memcpy(news->master, ssl->session->master, 48);
   news->in_epoch = ssl->in_epoch;
-  memcpy(news->out_ctr, ssl->out_ctr, 8);
+  memcpy(news->out_ctr, ssl->cur_out_ctr, 8);
 
   return scope.Escape(instance);
 }

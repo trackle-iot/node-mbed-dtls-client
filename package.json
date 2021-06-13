@@ -1,6 +1,6 @@
 {
   "name": "node-mbed-dtls-client",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "DTLS client created by wrapping mbedtls",
   "main": "index.js",
   "scripts": {
@@ -24,6 +24,7 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
+    "bindings": "^1.5.0",
     "nan": "^2.14.0"
   }
 }

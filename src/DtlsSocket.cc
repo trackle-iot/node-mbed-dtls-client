@@ -85,7 +85,7 @@ void DtlsSocket::ReceiveDataFromNode(const Nan::FunctionCallbackInfo<v8::Value>&
 
 NAN_GETTER(DtlsSocket::GetOutCounter) {
   DtlsSocket *socket = Nan::ObjectWrap::Unwrap<DtlsSocket>(info.This());
-  info.GetReturnValue().Set(Nan::CopyBuffer((char *)socket->ssl_context.out_ctr, 8).ToLocalChecked());
+  info.GetReturnValue().Set(Nan::CopyBuffer((char *)socket->ssl_context.cur_out_ctr, 8).ToLocalChecked());
 }
 
 NAN_GETTER(DtlsSocket::GetSession) {
@@ -97,10 +97,6 @@ NAN_GETTER(DtlsSocket::GetSession) {
 void DtlsSocket::Close(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 	DtlsSocket *socket = Nan::ObjectWrap::Unwrap<DtlsSocket>(info.This());
 	int ret = socket->close();
-	if (ret < 0) {
-		// TODO error?
-		return;
-	}
 
 	info.GetReturnValue().Set(Nan::New(ret));
 }
@@ -271,20 +267,21 @@ int DtlsSocket::step() {
 		if (ret == 0) {
 			// in these states we are waiting for more input
 			if (
-				ssl_context.state == MBEDTLS_SSL_SERVER_HELLO ||
-				ssl_context.state == MBEDTLS_SSL_SERVER_KEY_EXCHANGE ||
-				ssl_context.state == MBEDTLS_SSL_CERTIFICATE_REQUEST ||
-				ssl_context.state == MBEDTLS_SSL_SERVER_HELLO_DONE ||
-				ssl_context.state == MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC ||
-				ssl_context.state == MBEDTLS_SSL_SERVER_FINISHED
-				) {
+				ssl_context.state == MBEDTLS_SSL_SERVER_HELLO
+			) {
 				return 0;
 			}
 			// keep looping to send everything
 			continue;
+		} else if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
+			// we just need more data, so return
+			if (recv_len > 0)
+				continue;
+
+			return 0;
 		} else if (ret != 0) {
 			// bad things
-			error(ret);			
+			error(ret);
 			return 0;
 		}
 	}

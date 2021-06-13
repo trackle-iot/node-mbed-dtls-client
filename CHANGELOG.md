@@ -1,3 +1,7 @@
+# 2.2.0
+
+* updating mbedtls submodule to 2.22.0
+
 # 2.1.0
 
 * updating mbedtls submodule to 2.9.0
