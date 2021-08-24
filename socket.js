@@ -49,6 +49,10 @@ class DtlsSocket extends stream.Duplex {
 		return this.mbedSocket.session;
 	}
 
+	dumbPing() {
+		this.dgramSocket.send(Buffer.from([0x70]), 0, 1, this.remotePort, this.remoteAddress);
+	}
+
 	bind(port, address, callback) {
 		this.dgramSocket.bind(port, address, callback);
 	}
